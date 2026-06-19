@@ -21,6 +21,12 @@
     --blue:      #3b82f6;
     --radius:    14px;
     --font:      -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+
+    /* Phase background colors */
+    --phase-bg-prep:     #c97400;
+    --phase-bg-exercise: #16a34a;
+    --phase-bg-pause:    #dc2626;
+    --phase-text:        #1a1a1a;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -43,6 +49,8 @@
     background: var(--surface);
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
+    z-index: 10;
+    position: relative;
   }
   .tab-btn {
     flex: 1;
@@ -61,11 +69,208 @@
   }
   .tab-btn .icon { font-size: 20px; }
   .tab-btn.active { color: var(--text); }
-  .tab-btn.active .icon { filter: drop-shadow(0 0 6px rgba(255,255,255,.3)); }
 
   /* ── PAGES ── */
-  .page { display: none; flex: 1; overflow-y: auto; padding: 20px 16px 32px; }
-  .page.active { display: flex; flex-direction: column; gap: 16px; }
+  .page { display: none; flex: 1; overflow-y: auto; }
+  .page.active { display: flex; flex-direction: column; }
+
+  /* ── TIMER PAGE layout ── */
+  #page-timer {
+    overflow: hidden;
+  }
+
+  /* Top bar: profile selector — always dark */
+  .timer-top-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    flex-shrink: 0;
+  }
+  .timer-top-bar .card-title { margin-bottom: 8px; }
+
+  /* Phase area — full bleed color block */
+  .phase-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 14px 20px 0;
+    transition: background .35s ease;
+    overflow: hidden;
+  }
+  .phase-area.phase-idle     { background: var(--bg); }
+  .phase-area.phase-prep     { background: var(--phase-bg-prep); }
+  .phase-area.phase-exercise { background: var(--phase-bg-exercise); }
+  .phase-area.phase-pause    { background: var(--phase-bg-pause); }
+
+  /* Text colors flip when active */
+  .phase-area.phase-prep .active-text,
+  .phase-area.phase-exercise .active-text,
+  .phase-area.phase-pause .active-text { color: var(--phase-text) !important; }
+
+  .phase-area.phase-prep .muted-text,
+  .phase-area.phase-exercise .muted-text,
+  .phase-area.phase-pause .muted-text { color: rgba(0,0,0,.55) !important; }
+
+  /* ── WORKOUT REMAINING BAR (top of phase area) ── */
+  .workout-remaining {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .workout-remaining-ring {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+  }
+  .workout-remaining-ring svg {
+    position: absolute;
+    top: 0; left: 0;
+    transform: rotate(-90deg);
+  }
+  .wr-bg { fill: none; stroke: rgba(0,0,0,.2); stroke-width: 4; }
+  .wr-fg { fill: none; stroke: rgba(0,0,0,.6); stroke-width: 4; stroke-linecap: round;
+           transition: stroke-dashoffset 1s linear; }
+  .workout-remaining-ring .wr-text {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700; color: rgba(0,0,0,.7);
+    line-height: 1;
+    text-align: center;
+  }
+  .workout-remaining-info { flex: 1; }
+  .workout-remaining-info .wr-label {
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em;
+    color: rgba(0,0,0,.5);
+  }
+  .workout-remaining-info .wr-time {
+    font-size: 20px; font-weight: 300; font-variant-numeric: tabular-nums;
+    color: rgba(0,0,0,.8);
+  }
+
+  /* ── PHASE LABEL & EXERCISE NAME ── */
+  .timer-phase-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--muted);
+    margin-bottom: 4px;
+    min-height: 16px;
+    align-self: flex-start;
+  }
+  .timer-exercise-name {
+    font-size: 24px;
+    font-weight: 800;
+    text-align: center;
+    line-height: 1.15;
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  /* ── MAIN RING ── */
+  .timer-ring-wrap {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 4px 0 8px;
+  }
+  .timer-ring-wrap svg {
+    position: absolute;
+    top: 0; left: 0;
+    transform: rotate(-90deg);
+  }
+  .ring-track { fill: none; stroke: rgba(0,0,0,.18); stroke-width: 12; }
+  .ring-fill  { fill: none; stroke: rgba(0,0,0,.7); stroke-width: 12; stroke-linecap: round;
+                transition: stroke-dashoffset .95s linear; }
+  .timer-number {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+  }
+  .timer-mmss {
+    font-size: 54px;
+    font-weight: 200;
+    line-height: 1;
+    letter-spacing: -.02em;
+    font-variant-numeric: tabular-nums;
+    color: rgba(0,0,0,.85);
+  }
+  .timer-mmss-idle { color: var(--text); }
+
+  /* ── META ROW ── */
+  .timer-meta {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 6px;
+  }
+  .timer-meta-item { text-align: center; }
+  .timer-meta-item .val {
+    font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+  .timer-meta-item .lbl {
+    font-size: 10px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .06em;
+  }
+
+  .timer-next {
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    min-height: 18px;
+    padding: 0 8px;
+  }
+  .timer-next span { color: var(--text); font-weight: 500; }
+
+  /* ── CONTROLS ── */
+  .timer-controls-wrap {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 12px 16px 20px;
+    flex-shrink: 0;
+  }
+  .timer-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .btn-abort { grid-column: 1 / -1; }
+
+  /* ── IDLE STATE ── */
+  .idle-hint {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    color: var(--muted);
+    font-size: 14px;
+    gap: 8px;
+    padding: 32px 0 40px;
+  }
+  .idle-hint .big { font-size: 52px; }
+
+  /* ── START BUTTON ── */
+  .start-btn-wrap {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 12px 16px 20px;
+    flex-shrink: 0;
+  }
 
   /* ── CARDS ── */
   .card {
@@ -132,115 +337,6 @@
     pointer-events: none;
   }
 
-  /* ── TIMER DISPLAY ── */
-  .timer-screen {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0;
-  }
-  .timer-phase-label {
-    font-size: 13px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .1em;
-    color: var(--muted);
-    margin-bottom: 8px;
-    min-height: 18px;
-  }
-  .timer-exercise-name {
-    font-size: 26px;
-    font-weight: 700;
-    text-align: center;
-    line-height: 1.2;
-    min-height: 64px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .timer-ring-wrap {
-    position: relative;
-    width: 220px;
-    height: 220px;
-    margin: 16px 0;
-  }
-  .timer-ring-wrap svg {
-    position: absolute;
-    top: 0; left: 0;
-    transform: rotate(-90deg);
-  }
-  .timer-ring-bg { fill: none; stroke: var(--border); stroke-width: 10; }
-  .timer-ring-fg { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset .9s linear, stroke .3s; }
-  .timer-ring-fg.phase-exercise { stroke: var(--green); }
-  .timer-ring-fg.phase-pause    { stroke: var(--red); }
-  .timer-ring-fg.phase-prep     { stroke: var(--amber); }
-  .timer-number {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-  }
-  .timer-seconds {
-    font-size: 72px;
-    font-weight: 300;
-    line-height: 1;
-    letter-spacing: -.03em;
-    font-variant-numeric: tabular-nums;
-  }
-  .timer-seconds.phase-exercise { color: var(--green); }
-  .timer-seconds.phase-pause    { color: var(--red); }
-  .timer-seconds.phase-prep     { color: var(--amber); }
-
-  .timer-meta {
-    display: flex;
-    gap: 24px;
-    margin-bottom: 8px;
-  }
-  .timer-meta-item {
-    text-align: center;
-  }
-  .timer-meta-item .val {
-    font-size: 20px;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-  }
-  .timer-meta-item .lbl {
-    font-size: 11px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: .06em;
-  }
-
-  .timer-next {
-    font-size: 13px;
-    color: var(--muted);
-    text-align: center;
-    min-height: 20px;
-  }
-  .timer-next span { color: var(--text); font-weight: 500; }
-
-  .timer-controls {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    width: 100%;
-    margin-top: 20px;
-  }
-  .timer-controls .btn-lg { border-radius: 12px; }
-  .btn-abort { grid-column: 1 / -1; }
-
-  /* ── IDLE STATE ── */
-  .idle-hint {
-    text-align: center;
-    color: var(--muted);
-    font-size: 14px;
-    padding: 32px 0;
-  }
-  .idle-hint .big { font-size: 48px; margin-bottom: 8px; }
-
   /* ── FINISH OVERLAY ── */
   .overlay {
     display: none;
@@ -262,13 +358,15 @@
     width: 100%;
     max-width: 340px;
   }
-  .overlay-icon { font-size: 56px; margin-bottom: 12px; }
+  .overlay-icon  { font-size: 56px; margin-bottom: 12px; }
   .overlay-title { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
-  .overlay-sub { color: var(--muted); font-size: 15px; margin-bottom: 24px; }
-  .overlay-stat { font-size: 36px; font-weight: 300; color: var(--green); margin-bottom: 4px; }
-  .overlay-stat-lbl { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 24px; }
+  .overlay-sub   { color: var(--muted); font-size: 15px; margin-bottom: 24px; }
+  .overlay-stat  { font-size: 36px; font-weight: 300; color: var(--green); margin-bottom: 4px; }
+  .overlay-stat-lbl { font-size: 12px; color: var(--muted); text-transform: uppercase;
+                      letter-spacing: .08em; margin-bottom: 24px; }
 
   /* ── PROFILES PAGE ── */
+  #page-profiles { overflow-y: auto; padding: 20px 16px 32px; gap: 16px; }
   .profile-list { display: flex; flex-direction: column; gap: 10px; }
   .profile-item {
     background: var(--surface);
@@ -282,12 +380,7 @@
     transition: border-color .15s;
   }
   .profile-item.selected { border-color: var(--green); }
-  .profile-item-dot {
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    background: var(--border);
-    flex-shrink: 0;
-  }
+  .profile-item-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
   .profile-item.selected .profile-item-dot { background: var(--green); }
   .profile-item-name { font-weight: 600; flex: 1; }
   .profile-item-meta { font-size: 12px; color: var(--muted); }
@@ -334,14 +427,10 @@
     min-height: 48px;
   }
   .toggle-label { font-size: 16px; }
-  .toggle {
-    position: relative;
-    width: 51px; height: 31px;
-  }
+  .toggle { position: relative; width: 51px; height: 31px; }
   .toggle input { opacity: 0; width: 0; height: 0; }
   .toggle-track {
-    position: absolute;
-    inset: 0;
+    position: absolute; inset: 0;
     background: var(--border);
     border-radius: 15px;
     transition: background .2s;
@@ -374,7 +463,6 @@
   .exercise-row-bottom input { min-height: 40px; padding: 8px 12px; font-size: 15px; }
   .exercise-mini-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
   .drag-handle { color: var(--muted); font-size: 18px; cursor: grab; padding: 4px; touch-action: none; }
-
   .btn-add-exercise {
     background: var(--surface2);
     border: 1px dashed var(--border);
@@ -389,7 +477,6 @@
     transition: color .15s, border-color .15s;
   }
   .btn-add-exercise:active { color: var(--text); border-color: var(--text); }
-
   .editor-footer { display: flex; gap: 10px; padding-top: 4px; }
 
   /* ── UTIL ── */
@@ -398,7 +485,7 @@
   .empty-state { text-align: center; color: var(--muted); padding: 40px 0; font-size: 14px; }
 
   @media (prefers-reduced-motion: reduce) {
-    .timer-ring-fg { transition: none; }
+    .ring-fill, .wr-fg, .phase-area { transition: none; }
   }
 </style>
 </head>
@@ -419,67 +506,91 @@
 <!-- ══ TIMER PAGE ══ -->
 <div class="page active" id="page-timer">
 
-  <!-- Profile selector -->
-  <div class="card">
+  <!-- Profile selector — always dark -->
+  <div class="timer-top-bar">
     <div class="card-title">Workout-Profil</div>
     <div class="profile-select-wrap">
       <select id="timer-profile-select" onchange="onProfileSelectChange()"></select>
     </div>
   </div>
 
-  <!-- Idle / Active timer -->
-  <div class="card" id="timer-card">
-    <div id="timer-idle">
-      <div class="idle-hint">
-        <div class="big">🏋️</div>
-        <div>Profil wählen und starten</div>
-      </div>
+  <!-- Phase area (color changes) -->
+  <div class="phase-area phase-idle" id="phase-area">
+
+    <!-- IDLE -->
+    <div class="idle-hint" id="timer-idle">
+      <div class="big">🏋️</div>
+      <div>Profil wählen und starten</div>
     </div>
 
-    <div id="timer-active" style="display:none">
-      <div class="timer-screen">
-        <div class="timer-phase-label" id="t-phase-label"></div>
-        <div class="timer-exercise-name" id="t-exercise-name"></div>
+    <!-- ACTIVE -->
+    <div id="timer-active" style="display:none; width:100%; display:none; flex-direction:column; align-items:center;">
 
-        <div class="timer-ring-wrap">
-          <svg width="220" height="220" viewBox="0 0 220 220">
-            <circle class="timer-ring-bg" cx="110" cy="110" r="100"/>
-            <circle class="timer-ring-fg" id="t-ring" cx="110" cy="110" r="100"
-              stroke-dasharray="628" stroke-dashoffset="0"/>
+      <!-- Workout-Restzeit oben -->
+      <div class="workout-remaining">
+        <div class="workout-remaining-ring">
+          <svg width="44" height="44" viewBox="0 0 44 44">
+            <circle class="wr-bg" cx="22" cy="22" r="18"/>
+            <circle class="wr-fg" id="wr-ring" cx="22" cy="22" r="18"
+              stroke-dasharray="113" stroke-dashoffset="0"/>
           </svg>
-          <div class="timer-number">
-            <div class="timer-seconds" id="t-seconds">0</div>
-          </div>
+          <div class="wr-text" id="wr-pct">100%</div>
         </div>
-
+        <div class="workout-remaining-info">
+          <div class="wr-label">Workout Restzeit</div>
+          <div class="wr-time active-text" id="wr-time">–</div>
+        </div>
         <div class="timer-meta">
           <div class="timer-meta-item">
-            <div class="val" id="t-round">–</div>
-            <div class="lbl">Runde</div>
+            <div class="val active-text" id="t-round">–</div>
+            <div class="lbl muted-text">Runde</div>
           </div>
           <div class="timer-meta-item">
-            <div class="val" id="t-ex-count">–</div>
-            <div class="lbl">Übung</div>
-          </div>
-          <div class="timer-meta-item">
-            <div class="val" id="t-total">0:00</div>
-            <div class="lbl">Gesamt</div>
+            <div class="val active-text" id="t-ex-count">–</div>
+            <div class="lbl muted-text">Übung</div>
           </div>
         </div>
+      </div>
 
-        <div class="timer-next" id="t-next"></div>
+      <!-- Phase label -->
+      <div class="timer-phase-label muted-text" id="t-phase-label"></div>
 
-        <div class="timer-controls">
-          <button class="btn btn-lg btn-amber" id="btn-pauseresume" onclick="togglePause()">Pause</button>
-          <button class="btn btn-lg btn-ghost" onclick="skipExercise()">Überspringen</button>
-          <button class="btn btn-lg btn-danger btn-abort" onclick="abortTimer()">Abbrechen</button>
+      <!-- Exercise name -->
+      <div class="timer-exercise-name active-text" id="t-exercise-name"></div>
+
+      <!-- Main ring -->
+      <div class="timer-ring-wrap">
+        <svg width="200" height="200" viewBox="0 0 200 200">
+          <circle class="ring-track" cx="100" cy="100" r="88"/>
+          <circle class="ring-fill"  id="t-ring" cx="100" cy="100" r="88"
+            stroke-dasharray="553" stroke-dashoffset="0"/>
+        </svg>
+        <div class="timer-number">
+          <div class="timer-mmss active-text" id="t-mmss">0:00</div>
         </div>
+      </div>
+
+      <!-- Next hint -->
+      <div class="timer-next muted-text" id="t-next"></div>
+
+    </div><!-- /timer-active -->
+  </div><!-- /phase-area -->
+
+  <!-- Controls — always dark, below phase area -->
+  <div id="timer-controls-wrap" style="display:none">
+    <div class="timer-controls-wrap">
+      <div class="timer-controls">
+        <button class="btn btn-lg btn-amber" id="btn-pauseresume" onclick="togglePause()">Pause</button>
+        <button class="btn btn-lg btn-ghost" onclick="skipExercise()">Überspringen</button>
+        <button class="btn btn-lg btn-danger btn-abort" onclick="abortTimer()">Abbrechen</button>
       </div>
     </div>
   </div>
 
-  <!-- Start button (shown when idle) -->
-  <button class="btn btn-lg btn-green" id="btn-start" onclick="startTimer()">▶  Start</button>
+  <!-- Start button -->
+  <div id="start-btn-wrap" class="start-btn-wrap">
+    <button class="btn btn-lg btn-green" id="btn-start" onclick="startTimer()">▶  Start</button>
+  </div>
 
 </div>
 
@@ -493,7 +604,6 @@
 
   <div class="profile-list" id="profile-list"></div>
 
-  <!-- Editor -->
   <div class="card" id="editor-card" style="display:none">
     <div class="card-title" id="editor-title">Profil bearbeiten</div>
     <div class="editor-section">
@@ -530,7 +640,6 @@
       </div>
 
       <div class="exercise-list" id="ed-exercise-list"></div>
-
       <button class="btn-add-exercise" onclick="addExercise()">+ Übung hinzufügen</button>
 
       <div class="editor-footer">
@@ -558,8 +667,8 @@
 // ════════════════════════════════════════
 //  STORAGE
 // ════════════════════════════════════════
-const PROFILES_KEY     = 'ft_profiles';
-const ACTIVE_KEY       = 'ft_active_profile';
+const PROFILES_KEY = 'ft_profiles';
+const ACTIVE_KEY   = 'ft_active_profile';
 
 function loadProfiles() {
   try { return JSON.parse(localStorage.getItem(PROFILES_KEY)) || {}; } catch { return {}; }
@@ -592,7 +701,7 @@ function renderTimerTab() {
   const ids = Object.keys(profiles);
   if (ids.length === 0) {
     sel.innerHTML = '<option value="">– Noch keine Profile –</option>';
-    document.getElementById('btn-start').style.display = 'none';
+    document.getElementById('start-btn-wrap').style.display = 'none';
     return;
   }
   ids.forEach(id => {
@@ -602,18 +711,58 @@ function renderTimerTab() {
     if (id === activeId) opt.selected = true;
     sel.appendChild(opt);
   });
-  document.getElementById('btn-start').style.display = '';
+  document.getElementById('start-btn-wrap').style.display = '';
 }
 
 function onProfileSelectChange() {
-  const sel = document.getElementById('timer-profile-select');
-  saveActive(sel.value);
+  saveActive(document.getElementById('timer-profile-select').value);
+}
+
+// ════════════════════════════════════════
+//  WORKOUT TOTAL DURATION CALC
+// ════════════════════════════════════════
+function calcWorkoutTotal(profile) {
+  // prep + (exercises + pauses) * rounds
+  let perRound = 0;
+  profile.exercises.forEach(ex => { perRound += ex.duration + (ex.pause || 0); });
+  return (profile.prepTime || 0) + perRound * profile.rounds;
+}
+
+function calcRemainingFromState(s) {
+  // remaining = total - elapsed in current phase - future phases
+  let remaining = 0;
+  // rest of current phase
+  remaining += s.secondsLeft;
+  // rest of current round (exercises after current)
+  if (s.phase === 'exercise') {
+    const ex = s.profile.exercises[s.exIdx];
+    remaining += (ex.pause || 0); // pause after this exercise
+    for (let i = s.exIdx + 1; i < s.profile.exercises.length; i++) {
+      remaining += s.profile.exercises[i].duration + (s.profile.exercises[i].pause || 0);
+    }
+  } else if (s.phase === 'pause') {
+    // after this pause: remaining exercises in current round
+    for (let i = s.exIdx + 1; i < s.profile.exercises.length; i++) {
+      remaining += s.profile.exercises[i].duration + (s.profile.exercises[i].pause || 0);
+    }
+  } else if (s.phase === 'prep') {
+    // all rounds
+    let perRound = 0;
+    s.profile.exercises.forEach(ex => { perRound += ex.duration + (ex.pause || 0); });
+    remaining += perRound * s.profile.rounds;
+    return remaining;
+  }
+  // future rounds
+  let perRound = 0;
+  s.profile.exercises.forEach(ex => { perRound += ex.duration + (ex.pause || 0); });
+  remaining += perRound * (s.profile.rounds - s.round);
+  return remaining;
 }
 
 // ════════════════════════════════════════
 //  TIMER LOGIC
 // ════════════════════════════════════════
-let timerState = null; // { phase, exIdx, round, secondsLeft, phaseDuration, intervalId, totalSeconds, profile }
+let timerState = null;
 
 function startTimer() {
   const profiles = loadProfiles();
@@ -621,25 +770,28 @@ function startTimer() {
   if (!id || !profiles[id]) return;
   const profile = JSON.parse(JSON.stringify(profiles[id]));
   if (!profile.exercises || profile.exercises.length === 0) {
-    alert('Dieses Profil hat keine Übungen.');
-    return;
+    alert('Dieses Profil hat keine Übungen.'); return;
   }
+
+  const workoutTotal = calcWorkoutTotal(profile);
 
   timerState = {
     profile,
-    phase: 'prep',        // prep | exercise | pause
+    phase: 'prep',
     exIdx: 0,
     round: 1,
-    secondsLeft: profile.prepTime > 0 ? profile.prepTime : 0,
+    secondsLeft:   profile.prepTime > 0 ? profile.prepTime : 0,
     phaseDuration: profile.prepTime > 0 ? profile.prepTime : 0,
-    totalSeconds: 0,
+    totalSeconds:  0,
+    workoutTotal,
     intervalId: null,
   };
 
-  document.getElementById('timer-idle').style.display   = 'none';
-  document.getElementById('timer-active').style.display = '';
-  document.getElementById('btn-start').style.display    = 'none';
-  document.getElementById('timer-profile-select').disabled = true;
+  document.getElementById('timer-idle').style.display         = 'none';
+  document.getElementById('timer-active').style.display       = 'flex';
+  document.getElementById('timer-controls-wrap').style.display = '';
+  document.getElementById('start-btn-wrap').style.display     = 'none';
+  document.getElementById('timer-profile-select').disabled    = true;
 
   if (profile.prepTime > 0) {
     setPhase('prep');
@@ -652,13 +804,12 @@ function startTimer() {
 function tick() {
   if (!timerState) return;
   timerState.totalSeconds++;
-  updateTotalDisplay();
-
   timerState.secondsLeft--;
-  updateRingAndSeconds();
-
+  updateAllDisplays();
   if (timerState.secondsLeft <= 0) {
     nextPhase();
+  } else if (timerState.secondsLeft <= 3) {
+    beep('countdown');
   }
 }
 
@@ -668,19 +819,15 @@ function nextPhase() {
     beginExercise();
   } else if (s.phase === 'exercise') {
     const ex = s.profile.exercises[s.exIdx];
-    if (ex.pause > 0) {
-      beginPause(ex.pause);
-    } else {
-      advanceExercise();
-    }
+    if (ex.pause > 0) beginPause(ex.pause);
+    else advanceExercise();
   } else if (s.phase === 'pause') {
     advanceExercise();
   }
 }
 
 function beginExercise() {
-  const s = timerState;
-  const ex = s.profile.exercises[s.exIdx];
+  const ex = timerState.profile.exercises[timerState.exIdx];
   setPhase('exercise', ex.duration);
   beep('exercise');
 }
@@ -694,17 +841,11 @@ function advanceExercise() {
   const s = timerState;
   s.exIdx++;
   if (s.exIdx >= s.profile.exercises.length) {
-    // End of round
-    if (s.round >= s.profile.rounds) {
-      finishWorkout();
-    } else {
-      s.round++;
-      s.exIdx = 0;
-      beginExercise();
-    }
-  } else {
-    beginExercise();
+    if (s.round >= s.profile.rounds) { finishWorkout(); return; }
+    s.round++;
+    s.exIdx = 0;
   }
+  beginExercise();
 }
 
 function setPhase(phase, duration) {
@@ -714,18 +855,28 @@ function setPhase(phase, duration) {
     s.secondsLeft   = duration;
     s.phaseDuration = duration;
   }
-  updateUI();
-  updateRingAndSeconds();
+  // Background color
+  const area = document.getElementById('phase-area');
+  area.className = `phase-area phase-${phase}`;
+
+  updateAllDisplays();
 }
 
-function updateUI() {
+function fmtMmSs(secs) {
+  secs = Math.max(0, secs);
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function updateAllDisplays() {
   const s = timerState;
+  if (!s) return;
   const ex = s.profile.exercises[s.exIdx] || {};
 
-  // Phase label & name
+  // Phase label & exercise name
   const phaseLabel = document.getElementById('t-phase-label');
   const exName     = document.getElementById('t-exercise-name');
-
   if (s.phase === 'prep') {
     phaseLabel.textContent = 'Vorbereitung';
     exName.textContent = s.profile.exercises[0]?.name || '';
@@ -734,11 +885,18 @@ function updateUI() {
     exName.textContent = ex.name || '';
   } else {
     phaseLabel.textContent = 'Pause';
-    const next = s.profile.exercises[s.exIdx + 1] || (s.round < s.profile.rounds ? s.profile.exercises[0] : null);
+    const next = s.profile.exercises[s.exIdx + 1] ||
+                 (s.round < s.profile.rounds ? s.profile.exercises[0] : null);
     exName.textContent = next ? `→ ${next.name}` : '→ Letzte Runde endet';
   }
 
-  // Round / exercise counter
+  // Main ring & MM:SS
+  const pct = s.phaseDuration > 0 ? s.secondsLeft / s.phaseDuration : 0;
+  const circ = 553;
+  document.getElementById('t-ring').style.strokeDashoffset = circ * (1 - pct);
+  document.getElementById('t-mmss').textContent = fmtMmSs(s.secondsLeft);
+
+  // Round / exercise
   document.getElementById('t-round').textContent    = `${s.round}/${s.profile.rounds}`;
   document.getElementById('t-ex-count').textContent = `${s.exIdx + 1}/${s.profile.exercises.length}`;
 
@@ -746,37 +904,20 @@ function updateUI() {
   const nextEl = document.getElementById('t-next');
   if (s.phase === 'exercise') {
     const nextEx = s.profile.exercises[s.exIdx + 1];
-    if (nextEx) {
-      nextEl.innerHTML = `Nächste: <span>${nextEx.name}</span>`;
-    } else if (s.round < s.profile.rounds) {
-      nextEl.innerHTML = `Nächste Runde: <span>${s.profile.exercises[0].name}</span>`;
-    } else {
-      nextEl.innerHTML = `<span>Letzte Übung!</span>`;
-    }
+    if (nextEx) nextEl.innerHTML = `Nächste: <span>${nextEx.name}</span>`;
+    else if (s.round < s.profile.rounds) nextEl.innerHTML = `Nächste Runde: <span>${s.profile.exercises[0].name}</span>`;
+    else nextEl.innerHTML = `<span>Letzte Übung!</span>`;
   } else {
     nextEl.innerHTML = '';
   }
 
-  // Ring and number class
-  const ring    = document.getElementById('t-ring');
-  const seconds = document.getElementById('t-seconds');
-  ring.className    = `timer-ring-fg phase-${s.phase}`;
-  seconds.className = `timer-seconds phase-${s.phase}`;
-}
-
-function updateRingAndSeconds() {
-  const s = timerState;
-  const pct = s.phaseDuration > 0 ? s.secondsLeft / s.phaseDuration : 0;
-  const circumference = 628;
-  document.getElementById('t-ring').style.strokeDashoffset = circumference * (1 - pct);
-  document.getElementById('t-seconds').textContent = Math.max(0, s.secondsLeft);
-}
-
-function updateTotalDisplay() {
-  const s = timerState;
-  const m = Math.floor(s.totalSeconds / 60);
-  const sec = s.totalSeconds % 60;
-  document.getElementById('t-total').textContent = `${m}:${String(sec).padStart(2,'0')}`;
+  // Workout remaining ring
+  const remaining   = calcRemainingFromState(s);
+  const totalPct    = s.workoutTotal > 0 ? remaining / s.workoutTotal : 0;
+  const wrCirc      = 113;
+  document.getElementById('wr-ring').style.strokeDashoffset = wrCirc * (1 - totalPct);
+  document.getElementById('wr-pct').textContent  = Math.round(totalPct * 100) + '%';
+  document.getElementById('wr-time').textContent = fmtMmSs(remaining);
 }
 
 function togglePause() {
@@ -795,14 +936,10 @@ function togglePause() {
 
 function skipExercise() {
   if (!timerState) return;
-  // Skip to end of current exercise phase (not pause)
   if (timerState.phase === 'exercise') {
     const ex = timerState.profile.exercises[timerState.exIdx];
-    if (ex.pause > 0) {
-      beginPause(ex.pause);
-    } else {
-      advanceExercise();
-    }
+    if (ex.pause > 0) beginPause(ex.pause);
+    else advanceExercise();
   } else if (timerState.phase === 'pause') {
     advanceExercise();
   }
@@ -821,24 +958,23 @@ function stopTimer() {
 }
 
 function resetTimerUI() {
-  document.getElementById('timer-idle').style.display   = '';
-  document.getElementById('timer-active').style.display = 'none';
-  document.getElementById('btn-start').style.display    = '';
-  document.getElementById('timer-profile-select').disabled = false;
-  document.getElementById('btn-pauseresume').textContent = 'Pause';
-  document.getElementById('btn-pauseresume').className   = 'btn btn-lg btn-amber';
+  document.getElementById('timer-idle').style.display          = '';
+  document.getElementById('timer-active').style.display        = 'none';
+  document.getElementById('timer-controls-wrap').style.display = 'none';
+  document.getElementById('start-btn-wrap').style.display      = '';
+  document.getElementById('timer-profile-select').disabled     = false;
+  document.getElementById('phase-area').className              = 'phase-area phase-idle';
+  document.getElementById('btn-pauseresume').textContent       = 'Pause';
+  document.getElementById('btn-pauseresume').className         = 'btn btn-lg btn-amber';
 }
 
 function finishWorkout() {
-  const duration = timerState.totalSeconds;
+  const duration    = timerState.totalSeconds;
   const profileName = timerState.profile.name;
   beep('finish');
   stopTimer();
   resetTimerUI();
-
-  const m   = Math.floor(duration / 60);
-  const sec = duration % 60;
-  document.getElementById('finish-duration').textContent     = `${m}:${String(sec).padStart(2,'0')} min`;
+  document.getElementById('finish-duration').textContent     = fmtMmSs(duration);
   document.getElementById('finish-profile-name').textContent = profileName;
   document.getElementById('finish-overlay').classList.add('visible');
 }
@@ -861,12 +997,14 @@ function beep(type) {
   try {
     const ctx = getAudioCtx();
     const configs = {
-      exercise: [{ f: 880, t: 0,    d: 0.12 }, { f: 1047, t: 0.14, d: 0.12 }],
-      pause:    [{ f: 440, t: 0,    d: 0.18 }],
-      finish:   [{ f: 523, t: 0,    d: 0.15 }, { f: 659, t: 0.18, d: 0.15 }, { f: 784, t: 0.36, d: 0.25 }],
+      exercise:  [{ f: 880, t: 0,    d: 0.12 }, { f: 1047, t: 0.14, d: 0.12 }],
+      pause:     [{ f: 440, t: 0,    d: 0.18 }],
+      countdown: [{ f: 660, t: 0,    d: 0.08 }],
+      finish:    [{ f: 523, t: 0,    d: 0.25 }, { f: 659, t: 0.30, d: 0.25 },
+                  { f: 784, t: 0.60, d: 0.25 }, { f: 1047, t: 0.90, d: 0.55 }],
     };
     (configs[type] || configs.exercise).forEach(({ f, t, d }) => {
-      const osc  = ctx.createOscillator();
+      const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain); gain.connect(ctx.destination);
       osc.frequency.value = f;
@@ -885,10 +1023,10 @@ function beep(type) {
 let editingId = null;
 
 function renderProfilesTab() {
-  const profiles  = loadProfiles();
-  const activeId  = loadActive();
-  const list      = document.getElementById('profile-list');
-  const ids       = Object.keys(profiles);
+  const profiles = loadProfiles();
+  const activeId = loadActive();
+  const list     = document.getElementById('profile-list');
+  const ids      = Object.keys(profiles);
 
   if (ids.length === 0) {
     list.innerHTML = '<div class="empty-state">Noch keine Profile.<br>Tippe auf „+ Neu" um zu starten.</div>';
@@ -908,8 +1046,7 @@ function renderProfilesTab() {
           <div class="icon-btn" onclick="selectProfile('${id}')">✓</div>
           <div class="icon-btn" onclick="editProfile('${id}')">✎</div>
           <div class="icon-btn" onclick="deleteProfile('${id}')" style="color:var(--red)">✕</div>
-        </div>
-      `;
+        </div>`;
       list.appendChild(item);
     });
   }
@@ -917,10 +1054,7 @@ function renderProfilesTab() {
   editingId = null;
 }
 
-function selectProfile(id) {
-  saveActive(id);
-  renderProfilesTab();
-}
+function selectProfile(id) { saveActive(id); renderProfilesTab(); }
 
 function deleteProfile(id) {
   const profiles = loadProfiles();
@@ -935,9 +1069,9 @@ function deleteProfile(id) {
 function newProfile() {
   editingId = null;
   document.getElementById('editor-title').textContent = 'Neues Profil';
-  document.getElementById('ed-name').value   = '';
-  document.getElementById('ed-rounds').value = '3';
-  document.getElementById('ed-prep').value   = '5';
+  document.getElementById('ed-name').value    = '';
+  document.getElementById('ed-rounds').value  = '3';
+  document.getElementById('ed-prep').value    = '5';
   document.getElementById('ed-sound').checked = true;
   renderExerciseEditor([{ name: '', duration: 30, pause: 10 }]);
   document.getElementById('editor-card').style.display = '';
@@ -962,20 +1096,18 @@ function editProfile(id) {
 function renderExerciseEditor(exercises) {
   const list = document.getElementById('ed-exercise-list');
   list.innerHTML = '';
-  exercises.forEach((ex, i) => {
-    list.appendChild(createExerciseRow(ex, i));
-  });
+  exercises.forEach((ex, i) => list.appendChild(createExerciseRow(ex, i)));
 }
 
 function createExerciseRow(ex, i) {
   const row = document.createElement('div');
   row.className   = 'exercise-row';
   row.dataset.idx = i;
-  row.innerHTML   = `
+  row.innerHTML = `
     <div class="exercise-row-top">
       <span class="drag-handle" title="Ziehen zum Sortieren">⠿</span>
       <input type="text" placeholder="Übungsname" value="${escHtml(ex.name)}" data-field="name">
-      <div class="icon-btn" onclick="removeExerciseRow(this)" style="color:var(--red); flex-shrink:0">✕</div>
+      <div class="icon-btn" onclick="removeExerciseRow(this)" style="color:var(--red);flex-shrink:0">✕</div>
     </div>
     <div class="exercise-row-bottom">
       <div>
@@ -986,26 +1118,21 @@ function createExerciseRow(ex, i) {
         <input type="number" min="0" max="300" value="${ex.pause}" data-field="pause" placeholder="10">
         <div class="exercise-mini-label">Pause danach (s)</div>
       </div>
-    </div>
-  `;
+    </div>`;
   return row;
 }
 
 function addExercise() {
   const list = document.getElementById('ed-exercise-list');
-  const idx  = list.children.length;
-  const row  = createExerciseRow({ name: '', duration: 30, pause: 10 }, idx);
+  const row  = createExerciseRow({ name: '', duration: 30, pause: 10 }, list.children.length);
   list.appendChild(row);
   row.querySelector('input[data-field="name"]').focus();
 }
 
-function removeExerciseRow(btn) {
-  btn.closest('.exercise-row').remove();
-}
+function removeExerciseRow(btn) { btn.closest('.exercise-row').remove(); }
 
 function readExercisesFromEditor() {
-  const rows = document.querySelectorAll('#ed-exercise-list .exercise-row');
-  return Array.from(rows).map(row => ({
+  return Array.from(document.querySelectorAll('#ed-exercise-list .exercise-row')).map(row => ({
     name:     row.querySelector('[data-field="name"]').value.trim(),
     duration: parseInt(row.querySelector('[data-field="duration"]').value) || 30,
     pause:    parseInt(row.querySelector('[data-field="pause"]').value)    || 0,
@@ -1013,24 +1140,22 @@ function readExercisesFromEditor() {
 }
 
 function saveProfile() {
-  const name    = document.getElementById('ed-name').value.trim();
-  const rounds  = parseInt(document.getElementById('ed-rounds').value) || 1;
-  const prepTime= parseInt(document.getElementById('ed-prep').value)   || 0;
-  const sound   = document.getElementById('ed-sound').checked;
+  const name      = document.getElementById('ed-name').value.trim();
+  const rounds    = parseInt(document.getElementById('ed-rounds').value) || 1;
+  const prepTime  = parseInt(document.getElementById('ed-prep').value)   || 0;
+  const sound     = document.getElementById('ed-sound').checked;
   const exercises = readExercisesFromEditor();
 
-  if (!name) { alert('Bitte einen Namen eingeben.'); return; }
-  if (exercises.length === 0) { alert('Mindestens eine Übung erforderlich.'); return; }
-  if (exercises.some(e => !e.name)) { alert('Alle Übungen brauchen einen Namen.'); return; }
+  if (!name)                             { alert('Bitte einen Namen eingeben.'); return; }
+  if (exercises.length === 0)            { alert('Mindestens eine Übung erforderlich.'); return; }
+  if (exercises.some(e => !e.name))      { alert('Alle Übungen brauchen einen Namen.'); return; }
 
   const profiles = loadProfiles();
   const id = editingId || 'p_' + Date.now();
   profiles[id] = { name, rounds, prepTime, sound, exercises };
   saveProfiles(profiles);
   if (!loadActive()) saveActive(id);
-
   renderProfilesTab();
-  // Scroll back to top
   document.getElementById('page-profiles').scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1043,35 +1168,27 @@ function cancelEdit() {
 //  DRAG-TO-SORT (touch)
 // ════════════════════════════════════════
 (function() {
-  let dragging = null, startY = 0, origTop = 0, clone = null;
-
+  let dragging = null;
   document.addEventListener('touchstart', e => {
     const handle = e.target.closest('.drag-handle');
     if (!handle) return;
-    const row = handle.closest('.exercise-row');
-    dragging  = row;
-    startY    = e.touches[0].clientY;
-    origTop   = row.getBoundingClientRect().top;
-    row.style.opacity = '.4';
+    dragging = handle.closest('.exercise-row');
+    dragging.style.opacity = '.4';
     e.preventDefault();
   }, { passive: false });
-
   document.addEventListener('touchmove', e => {
     if (!dragging) return;
-    const y     = e.touches[0].clientY;
-    const list  = document.getElementById('ed-exercise-list');
-    const rows  = Array.from(list.querySelectorAll('.exercise-row')).filter(r => r !== dragging);
-    const rect  = list.getBoundingClientRect();
-    let after = null;
+    const y    = e.touches[0].clientY;
+    const list = document.getElementById('ed-exercise-list');
+    const rows = Array.from(list.querySelectorAll('.exercise-row')).filter(r => r !== dragging);
+    let after  = null;
     for (const r of rows) {
-      const mid = r.getBoundingClientRect().top + r.offsetHeight / 2;
-      if (y > mid) after = r;
+      if (y > r.getBoundingClientRect().top + r.offsetHeight / 2) after = r;
     }
     if (after) after.after(dragging);
     else if (rows[0]) rows[0].before(dragging);
     e.preventDefault();
   }, { passive: false });
-
   document.addEventListener('touchend', () => {
     if (!dragging) return;
     dragging.style.opacity = '';
@@ -1088,9 +1205,7 @@ function escHtml(str) {
     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-// ════════════════════════════════════════
-//  INIT
-// ════════════════════════════════════════
+// ── INIT ──
 renderTimerTab();
 </script>
 </body>
