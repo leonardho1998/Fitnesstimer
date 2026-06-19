@@ -1207,6 +1207,15 @@ function escHtml(str) {
 
 // ── INIT ──
 renderTimerTab();
+
+// ════════════════════════════════════════
+//  SERVICE WORKER
+// ════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js')
+    .then(r => console.log('[SW] registriert'))
+    .catch(e => console.warn('[SW] Fehler:', e));
+}
 </script>
 </body>
 </html>
